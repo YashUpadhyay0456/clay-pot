@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -34,11 +35,12 @@ public class HabitService {
         return habitRepository.findByUserId(userId);
     }
 
-    public HabitLog checkIn(Long userId, Long habitId, boolean completed) {
-        Habit habit = habitRepository.findById(habitId)
-                .orElseThrow(() -> new RuntimeException("Habit not found"));
-
-        if (!habit.getUserId().equals(userId)) {
+    public Optional<HabitLog> checkIn(Long userId, Long habitId, boolean completed) {
+        Optional<Habit> habit = habitRepository.findByIdAndUserId(habitId, userId);
+        if (habit.isEmpty()) {
+            return Optional.empty();
+        }
+        if (!habit.get().getUserId().equals(userId)) {
             throw new RuntimeException("Unauthorized");
         }
 
@@ -47,13 +49,30 @@ public class HabitService {
                 .findByHabitIdAndDate(habitId, today)
                 .orElseGet(() -> {
                     HabitLog newLog = new HabitLog();
-                    newLog.setHabit(habit);
+                    newLog.setHabit(habit.get());
                     newLog.setDate(today);
                     return newLog;
                 });
         habitLog.setCompleted(completed);
         habitLog.setCompletedAt(completed ? java.time.LocalDateTime.now() : null);
 
-        return habitLogRepository.save(habitLog);
+        return Optional.of(habitLogRepository.save(habitLog));
     }
+
+    public boolean deleteHabit(Long userId, Long habitId) {
+
+        Habit habit = habitRepository.findById(habitId).orElse(null);
+
+        if (habit == null) {
+            return false;
+        }
+
+        if (!habit.getUserId().equals(userId)) {
+            throw new IllegalStateException("UNAUTHORIZED");
+        }
+
+        habitRepository.delete(habit);
+        return true;
+    }
+
 }

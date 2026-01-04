@@ -30,7 +30,7 @@ public class HabitLog {
     @JoinColumn(name = "habit_id", nullable = false)
     private Habit habit;
 
-    @Column(nullable = false)
+    @Column(name = "checkin_date",nullable = false)
     private LocalDate date;
 
     @Column(nullable = false)
