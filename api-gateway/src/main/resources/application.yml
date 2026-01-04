@@ -14,8 +14,13 @@ spring:
           uri: lb://AUTH-SERVICE
           predicates:
             - Path=/auth/**
-          filters:
-            - StripPrefix=1
+#          filters:
+#            - StripPrefix=1
+        - id: habit-service
+          uri: lb://HABIT-SERVICE
+          predicates:
+            - Path=/habits/**
+
 
 eureka:
   client:
